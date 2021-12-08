@@ -1,4 +1,7 @@
 
+import gsap from "gsap"
+import IMask from 'imask'
+const tl = gsap.timeline()
 function phoneFormat(){
   let a = [...document.getElementsByTagName("a")]
   a.forEach(link => {
@@ -7,20 +10,20 @@ function phoneFormat(){
       let phoneLength = phone.length
       let tt = phone.split('')
       if(phoneLength == 11){
-        tt.splice(1,"", " (");
-        tt.splice(5,"", ") ");
-        tt.splice(9,"", "-");
-        tt.splice(12,"", "-");
+        tt.splice(1,"", " (")
+        tt.splice(5,"", ") ")
+        tt.splice(9,"", "-")
+        tt.splice(12,"", "-")
       } else if(phoneLength == 12){
-          tt.splice(2,"", " (");
-          tt.splice(6,"", ") ");
-          tt.splice(10,"", "-");
-          tt.splice(13,"", "-");
+          tt.splice(2,"", " (")
+          tt.splice(6,"", ") ")
+          tt.splice(10,"", "-")
+          tt.splice(13,"", "-")
       }else if(phoneLength == 13){
-          tt.splice(3,"", " (");
-          tt.splice(7,"", ") ");
-          tt.splice(11,"", "-");
-          tt.splice(14,"", "-");
+          tt.splice(3,"", " (")
+          tt.splice(7,"", ") ")
+          tt.splice(11,"", "-")
+          tt.splice(14,"", "-")
       }
       link.classList.add('vadik_kaprizny_designer')
       link.innerHTML = tt.join('')
@@ -28,6 +31,7 @@ function phoneFormat(){
   });
 }
 phoneFormat()
+
 
 let title = document.querySelectorAll('.title')
 
@@ -46,7 +50,7 @@ let popularText = `<span class="popular_text">
                   </span>`
 popularRates.insertAdjacentHTML('afterbegin', popularText)
 
-// TweenMax.to('.speed_arrow', 4, { score: 20, onUpdate: updateHandler, onUpdateParams: [i] });
+// tl.to('.speed_arrow', 4, { score: 20, onUpdate: updateHandler, onUpdateParams: [i] });
 
 // function updateHandler(index) {
 //   console.log(index);
@@ -84,14 +88,14 @@ window.addEventListener('load', ()=>{
 })
 
 function elementInViewport(el) {
-  var top = el.offsetTop;
-  var left = el.offsetLeft;
-  var width = el.offsetWidth;
-  var height = el.offsetHeight;
+  var top = el.offsetTop
+  var left = el.offsetLeft
+  var width = el.offsetWidth
+  var height = el.offsetHeight
   while(el.offsetParent) {
-    el = el.offsetParent;
-    top += el.offsetTop;
-    left += el.offsetLeft;
+    el = el.offsetParent
+    top += el.offsetTop
+    left += el.offsetLeft
   }
   return (
     top >= window.pageYOffset &&
@@ -99,4 +103,84 @@ function elementInViewport(el) {
     (top + height) <= (window.pageYOffset + window.innerHeight) &&
     (left + width) <= (window.pageXOffset + window.innerWidth)
   );
+}
+document.querySelector('.offer_btn').addEventListener('click', ()=>{
+  fetch('/form.html').then(function (response) {
+    return response.text()
+  }).then(function (html) {
+    let offer_wrap = document.querySelector('.offer_wrap')
+
+    tl.to(offer_wrap, {opacity: 0, duration: .3}).then(res=>{
+      offer_wrap.style.display = 'none'
+      let offer = document.querySelector('.offer')
+      offer.insertAdjacentHTML('beforeend', html)
+      let form = offer.querySelector('.application')
+      tl.to(form, {opacity: 1, translateY: '0px', duration: .2})
+      let rateItems = form.querySelectorAll('.rates_dd_item')
+      let rateInput = form.querySelector('#rate')
+      form.querySelector('#rate').onfocus = function() {
+        tl.to('.rates_dd_list', {opacity: 1, height: 'auto', duration: .2})
+      };
+      rateInput.addEventListener('click', (e)=>{
+        
+      })
+      document.addEventListener('click', (e)=>{
+        let menu = form.querySelector('.rates_dd_list')
+        if(!menu.contains(e.target) && !form.querySelector('#rate').contains(e.target)){
+          tl.to('.rates_dd_list', {opacity: 0, height: '0px', duration: .2})
+        }
+      })
+      
+      rateItems.forEach(rateItem=>{
+        rateItem.addEventListener('click', ()=>{
+          tl.to('.rates_dd_list', {opacity: 0, height: '0px', duration: .2})
+          form.querySelector('#rate').value = rateItem.innerHTML
+          
+        })
+      })
+      
+      let phone = IMask(
+      form.querySelector('#phone'), {
+        mask: '+{7} (000) 000-00-00',
+        lazy: false,  // make placeholder always visible
+        placeholderChar: '0'     // defaults to '_'
+      });
+      form.querySelector('.send').addEventListener('click', (event)=>{
+        event.preventDefault()
+        let fio = form.querySelector('#fio').value
+        let address = form.querySelector('#address').value
+        let phone = form.querySelector('#phone').value
+        let data = {fio,address,phone}
+        
+        fetch('/ajax.html',{
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+          },
+          body: JSON.stringify(data)
+        })
+        .then(function (response) {
+          return response.json()
+        })
+        .then(res=>{
+          console.log(res);
+        })
+      })
+    })
+
+  }).catch(function (err) {
+    console.warn('Какя то ошибка.', err)
+  });
+})
+function replaceAt(str,index, replacement) {
+  return str.substr(0, index) + replacement + str.substr(index + replacement.length);
+}
+function phoneMask(phone){
+  let tt = phone.split('')
+  tt.splice(0,"", "+7")
+  tt.splice(1,"", " (")
+  tt.splice(5,"", ") ")
+  tt.splice(9,"", "-")
+  tt.splice(12,"", "-")
+  return tt.join('')
 }
